@@ -6,8 +6,8 @@ services:
     env_file:
       - path: .env
         required: false
-    # 호스트 네트워크 정보 수집을 위해 필요
-    network_mode: host
+    ports:
+      - "8000:8000"
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
