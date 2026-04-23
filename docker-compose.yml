@@ -4,7 +4,8 @@ services:
       context: .
       dockerfile: docker/Dockerfile.backend
     env_file:
-      - .env
+      - path: .env
+        required: false
     # 호스트 네트워크 정보 수집을 위해 필요
     network_mode: host
     volumes:
