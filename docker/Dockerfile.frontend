@@ -1,0 +1,20 @@
+# ── Build stage ──────────────────────────────────────────────
+FROM node:20-slim AS builder
+
+WORKDIR /build
+COPY gui/frontend/package*.json ./
+RUN npm ci
+
+COPY gui/frontend/ .
+RUN npm run build
+
+# ── Runtime stage (nginx) ─────────────────────────────────────
+FROM nginx:1.27-alpine
+
+RUN rm -rf /usr/share/nginx/html/*
+COPY --from=builder /build/dist /usr/share/nginx/html
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 3000
+
+CMD ["nginx", "-g", "daemon off;"]
