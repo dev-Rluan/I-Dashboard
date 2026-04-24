@@ -17,7 +17,7 @@ COPY core/ ./core/
 COPY gui/backend/ ./gui/backend/
 COPY gui/__init__.py ./gui/__init__.py
 
-RUN chown -R appuser:appuser /app
+RUN mkdir -p /app/data && chown -R appuser:appuser /app
 USER appuser
 
 ENV PYTHONUNBUFFERED=1
