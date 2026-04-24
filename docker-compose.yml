@@ -17,11 +17,11 @@ services:
       HOST_PROC: /host/proc
       HOST_SYS: /host/sys
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/system/health')"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-      start_period: 15s
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/system/health', timeout=3)\" 2>/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     restart: unless-stopped
 
   frontend:
