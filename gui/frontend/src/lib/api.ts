@@ -7,7 +7,9 @@ async function get<T>(path: string): Promise<T> {
 }
 
 export const api = {
-  systemInfo: () => get<SystemInfo>("/api/system/info"),
+  systemInfo:  () => get<SystemInfo>("/api/system/info"),
+  agents:      () => get<Agent[]>("/api/agents"),
+  agentLatest: (id: string) => get<AgentSnapshot>(`/api/agents/${encodeURIComponent(id)}/latest`),
   ports:      () => get<Port[]>("/api/ports"),
   firewall:   () => get<FirewallStatus>("/api/firewall"),
   resources:  () => get<Resources>("/api/resources"),
@@ -77,4 +79,20 @@ export interface DockerResult {
 
 export interface LogEntry {
   raw: string; level: string;
+}
+
+export interface Agent {
+  id: string; name: string; os: string; ip: string; last_seen: string;
+}
+
+export interface AgentSnapshot {
+  agent_id: string; hostname: string; os: string; architecture: string;
+  _timestamp: string;
+  resources?: Resources;
+  network?: NetworkInterface[];
+  ports?: Port[];
+  processes?: Process[];
+  services?: Service[];
+  firewall?: FirewallStatus;
+  docker?: DockerResult;
 }

@@ -3,6 +3,7 @@ import { useSystemInfo } from "../hooks/useSystemInfo"
 
 const NAV = [
   { to: "/",          label: "개요",         icon: "⊞" },
+  { to: "/agents",    label: "에이전트",     icon: "📡" },
   { to: "/ports",     label: "포트",         icon: "⛓" },
   { to: "/firewall",  label: "방화벽",       icon: "🛡" },
   { to: "/resources", label: "리소스",       icon: "📊" },

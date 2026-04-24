@@ -9,6 +9,7 @@ import Processes from "./pages/Processes"
 import Services  from "./pages/Services"
 import Logs      from "./pages/Logs"
 import Docker    from "./pages/Docker"
+import Agents    from "./pages/Agents"
 import { useSystemInfo } from "./hooks/useSystemInfo"
 
 function DockerBanner({ info }: { info: ReturnType<typeof useSystemInfo> }) {
@@ -38,6 +39,7 @@ export default function App() {
           <main className="flex-1 overflow-y-auto p-6">
             <Routes>
               <Route path="/"          element={<Overview />}  />
+              <Route path="/agents"    element={<Agents />}    />
               <Route path="/ports"     element={<Ports />}     />
               <Route path="/firewall"  element={<Firewall />}  />
               <Route path="/resources" element={<Resources />} />

@@ -1,11 +1,21 @@
 import os
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from gui.backend.db import init_db
 from gui.backend.middleware.auth import BasicAuthMiddleware
-from gui.backend.routers import ports, firewall, resources, network, processes, services, system, ws, docker, logs
+from gui.backend.routers import ports, firewall, resources, network, processes, services, system, ws, docker, logs, agents
 
-app = FastAPI(title="I-Dashboard API", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(title="I-Dashboard API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,3 +40,4 @@ app.include_router(services.router,  prefix="/api")
 app.include_router(docker.router,    prefix="/api")
 app.include_router(logs.router,      prefix="/api")
 app.include_router(ws.router)
+app.include_router(agents.router,   prefix="/api/agents")
