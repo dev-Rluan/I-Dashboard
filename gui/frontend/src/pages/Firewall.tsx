@@ -2,18 +2,25 @@ import { useEffect, useState } from "react"
 import { api } from "../lib/api"
 import type { FirewallStatus } from "../lib/api"
 import { useInterval } from "../hooks/useInterval"
+import { useSystemInfo } from "../hooks/useSystemInfo"
 import StatusBadge from "../components/StatusBadge"
 import UnsupportedFeature from "../components/UnsupportedFeature"
 
 export default function Firewall() {
   const [fw, setFw] = useState<FirewallStatus | null>(null)
+  const sysInfo = useSystemInfo()
 
   const load = () => api.firewall().then(setFw).catch(() => {})
   useEffect(() => { load() }, [])
   useInterval(load, 15000)
 
   if (!fw) return <div className="text-gray-500 text-sm">로딩 중...</div>
-  if (!fw.supported) return <UnsupportedFeature message="이 환경에서 방화벽 정보를 수집할 수 없습니다. 관리자 권한으로 실행하세요." />
+  if (!fw.supported) {
+    const msg = sysInfo?.is_docker
+      ? "Docker 컨테이너 환경에서는 호스트 방화벽 정보를 수집할 수 없습니다. 백엔드를 호스트에서 직접 실행하세요."
+      : "방화벽 정보를 수집할 수 없습니다. 관리자(root) 권한으로 실행하세요."
+    return <UnsupportedFeature message={msg} />
+  }
 
   return (
     <div className="space-y-4">

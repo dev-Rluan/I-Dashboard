@@ -26,6 +26,7 @@ export const api = {
 export interface SystemInfo {
   hostname: string; os: string; os_version: string;
   os_release: string; architecture: string; python_version: string;
+  is_docker: boolean; host_proc: string;
 }
 
 export interface Port {
