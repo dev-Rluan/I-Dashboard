@@ -36,10 +36,12 @@ logging.basicConfig(
 log = logging.getLogger("agent")
 
 
-def _safe(fn, fallback=None):
+def _safe(fn, fallback=None, name=""):
     try:
         return fn()
-    except Exception:
+    except Exception as e:
+        if name:
+            log.warning("수집 실패 [%s]: %s", name, e)
         return fallback
 
 
@@ -52,15 +54,16 @@ def collect() -> dict:
         "architecture": platform.machine(),
     }
 
-    snapshot["resources"] = _safe(lambda: __import__("core.resources", fromlist=["get_resources"]).get_resources())
-    snapshot["network"] = _safe(lambda: __import__("core.network", fromlist=["get_interfaces"]).get_interfaces(), [])
-    snapshot["ports"] = _safe(lambda: __import__("core.ports", fromlist=["get_open_ports"]).get_open_ports(), [])
-    snapshot["processes"] = _safe(lambda: __import__("core.processes", fromlist=["get_processes"]).get_processes(), [])
-    snapshot["services"] = _safe(lambda: __import__("core.services", fromlist=["get_services"]).get_services(), [])
-    snapshot["firewall"] = _safe(lambda: __import__("core.firewall", fromlist=["get_firewall_status"]).get_firewall_status())
-    snapshot["docker"] = _safe(
+    snapshot["resources"] = _safe(lambda: __import__("core.resources", fromlist=["get_resources"]).get_resources(), name="resources")
+    snapshot["network"]   = _safe(lambda: __import__("core.network",    fromlist=["get_interfaces"]).get_interfaces(),   [], name="network")
+    snapshot["ports"]     = _safe(lambda: __import__("core.ports",      fromlist=["get_open_ports"]).get_open_ports(),   [], name="ports")
+    snapshot["processes"] = _safe(lambda: __import__("core.processes",  fromlist=["get_processes"]).get_processes(),     [], name="processes")
+    snapshot["services"]  = _safe(lambda: __import__("core.services",   fromlist=["get_services"]).get_services(),       [], name="services")
+    snapshot["firewall"]  = _safe(lambda: __import__("core.firewall",   fromlist=["get_firewall_status"]).get_firewall_status(), name="firewall")
+    snapshot["docker"]    = _safe(
         lambda: __import__("core.docker", fromlist=["get_containers"]).get_containers(),
         {"supported": False, "containers": []},
+        name="docker",
     )
 
     return snapshot

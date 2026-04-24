@@ -52,6 +52,9 @@ function AgentDetail({ agent }: { agent: Agent }) {
         </div>
       </div>
 
+      {!snap ? null : !res ? (
+        <div className="text-yellow-600 text-sm">리소스 수집 실패 — 에이전트 로그를 확인하세요</div>
+      ) : null}
       {res ? (
         <div className="space-y-2">
           <div>
@@ -78,8 +81,6 @@ function AgentDetail({ agent }: { agent: Agent }) {
             <span>서비스 {snap?.services?.length ?? 0}개</span>
           </div>
         </div>
-      ) : (
-        <div className="text-gray-500 text-sm">스냅샷 로딩 중...</div>
       )}
 
       {snap && (
