@@ -10,7 +10,8 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
         self._cred = base64.b64encode(f"{username}:{password}".encode()).decode()
 
     async def dispatch(self, request: Request, call_next) -> Response:
-        if request.url.path == "/api/system/health":
+        path = request.url.path
+        if path == "/api/system/health" or path.startswith("/api/agents"):
             return await call_next(request)
         auth = request.headers.get("Authorization", "")
         if auth.startswith("Basic ") and auth[6:] == self._cred:
