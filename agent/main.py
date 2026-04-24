@@ -7,12 +7,14 @@
   PUSH_INTERVAL  푸시 주기(초)       기본값: 5
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import json
 import logging
-import os
 import platform
 import socket
-import sys
 import time
 import urllib.error
 import urllib.request
