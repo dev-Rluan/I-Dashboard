@@ -35,6 +35,9 @@ I-Dashboard/
 │   ├── logs.py
 │   └── docker.py
 │
+├── agent/                 # 원격 서버 수집 에이전트
+│   └── main.py            # 시스템 정보 수집 → 백엔드로 Push
+│
 ├── cli/                   # TUI 버전 (rich 기반)
 │   └── main.py
 │
@@ -44,7 +47,8 @@ I-Dashboard/
 │
 ├── docker/                # Docker 이미지 파일
 ├── docker-compose.yml     # 프로덕션 배포
-└── docker-compose.dev.yml # 개발 환경
+├── docker-compose.dev.yml # 개발 환경
+└── build_agent.bat        # Windows 에이전트 exe 빌드 스크립트
 ```
 
 ---
@@ -83,7 +87,36 @@ python cli/main.py
 > 방화벽 수집은 관리자 권한이 필요할 수 있습니다.  
 > Linux/macOS: `sudo python cli/main.py`, Windows: 관리자 권한 터미널에서 실행
 
-### 방법 3 — 직접 실행 (GUI 개발)
+### 방법 3 — 에이전트 (원격 서버 모니터링)
+
+백엔드와 분리된 서버에서 시스템 정보를 수집해 푸시합니다.  
+Windows 서버 등 Docker를 쓰기 어려운 환경에 적합합니다.
+
+**모니터링할 서버에서:**
+
+```bash
+# Python으로 실행
+pip install -r requirements.txt
+
+# .env 또는 환경변수 설정 후 실행
+python agent/main.py
+```
+
+**Windows exe로 실행 (Python 불필요):**
+
+```bat
+# 빌드 (1회)
+build_agent.bat
+
+# 실행
+set BACKEND_URL=http://대시보드서버IP:8000
+set AGENT_TOKEN=설정한-토큰
+dist\i-dashboard-agent.exe
+```
+
+> 에이전트가 연결되면 대시보드 **에이전트** 페이지에서 각 서버의 상태를 확인할 수 있습니다.
+
+### 방법 4 — 직접 실행 (GUI 개발)
 
 ```bash
 pip install -r requirements.txt
@@ -99,6 +132,8 @@ cd gui/frontend && npm install && npm run dev
 
 ## 환경변수 (.env)
 
+### 백엔드 서버
+
 | 변수 | 기본값 | 설명 |
 |------|--------|------|
 | `DASHBOARD_USER` | (없음) | Basic Auth 사용자명 (설정 시 인증 활성화) |
@@ -106,6 +141,17 @@ cd gui/frontend && npm install && npm run dev
 | `REFRESH_INTERVAL` | `5` | 자동 갱신 주기 (초) |
 | `HOST_PROC` | `/proc` | Docker 내부에서 호스트 /proc 경로 |
 | `HOST_SYS` | `/sys` | Docker 내부에서 호스트 /sys 경로 |
+| `AGENT_TOKEN` | (없음) | 에이전트 인증 토큰 (설정 시 토큰 없는 요청 거부) |
+| `DB_PATH` | `data/dashboard.db` | SQLite 데이터베이스 경로 |
+
+### 에이전트 (agent/main.py)
+
+| 변수 | 기본값 | 설명 |
+|------|--------|------|
+| `BACKEND_URL` | **(필수)** | 백엔드 서버 주소 (예: `http://192.168.1.10:8000`) |
+| `AGENT_TOKEN` | (없음) | 인증 토큰 — 백엔드의 `AGENT_TOKEN`과 동일하게 설정 |
+| `AGENT_NAME` | 호스트명 | 대시보드에 표시될 에이전트 식별자 |
+| `PUSH_INTERVAL` | `5` | 데이터 푸시 주기 (초) |
 
 ---
 
