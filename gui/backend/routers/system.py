@@ -11,6 +11,11 @@ def _is_docker() -> bool:
     return Path("/.dockerenv").exists()
 
 
+@router.get("/health")
+def health():
+    return {"status": "ok"}
+
+
 @router.get("/info")
 def get_system_info():
     docker = _is_docker()

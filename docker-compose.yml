@@ -15,6 +15,12 @@ services:
     environment:
       HOST_PROC: /host/proc
       HOST_SYS: /host/sys
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/system/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
     restart: unless-stopped
 
   frontend:
@@ -24,5 +30,6 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
