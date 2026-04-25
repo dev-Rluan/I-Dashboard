@@ -1,5 +1,10 @@
+import os
+import platform
 import time
 import psutil
+
+_IS_MACOS = platform.system() == "Darwin"
+_MACOS_DATA_VOLUME = os.getenv("MACOS_DATA_VOLUME", "/System/Volumes/Data")
 
 _prev_disk_io: dict = {}
 _prev_disk_time: float = 0.0
@@ -75,7 +80,13 @@ def _get_disks() -> list[dict]:
 
     for part in partitions:
         try:
-            usage = psutil.disk_usage(part.mountpoint)
+            # macOS APFS: 시스템 볼륨(/) 대신 데이터 볼륨 사용량으로 대체
+            usage_path = (
+                _MACOS_DATA_VOLUME
+                if _IS_MACOS and part.mountpoint == "/" and os.path.isdir(_MACOS_DATA_VOLUME)
+                else part.mountpoint
+            )
+            usage = psutil.disk_usage(usage_path)
         except (PermissionError, OSError):
             continue
 
