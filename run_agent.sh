@@ -16,10 +16,14 @@ if [ ! -d "$VENV_DIR" ]; then
     echo "[setup] 완료"
 fi
 
-source "$VENV_DIR/bin/activate"
+PYTHON="$VENV_DIR/bin/python"
 
+# .env 로드 (BACKEND_URL 미설정 시)
 if [ -z "$BACKEND_URL" ] && [ -f "$SCRIPT_DIR/.env" ]; then
-    export $(grep -v '^#' "$SCRIPT_DIR/.env" | xargs)
+    while IFS= read -r line || [ -n "$line" ]; do
+        [[ "$line" =~ ^#.*$ || -z "$line" ]] && continue
+        export "$line"
+    done < "$SCRIPT_DIR/.env"
 fi
 
 if [ -z "$BACKEND_URL" ]; then
@@ -69,11 +73,11 @@ case "${1:-}" in
             echo "이미 실행 중입니다. (PID $(cat "$PID_FILE"))"
             exit 1
         fi
-        nohup python agent/main.py > "$LOG_FILE" 2>&1 &
+        nohup "$PYTHON" agent/main.py > "$LOG_FILE" 2>&1 &
         echo $! > "$PID_FILE"
         echo "백그라운드 시작 (PID $!) — 로그: $LOG_FILE"
         exit 0
         ;;
 esac
 
-exec python agent/main.py
+exec "$PYTHON" agent/main.py

@@ -14,12 +14,12 @@ WELL_KNOWN_PORTS = {
 }
 
 
-def _run(cmd: list[str], timeout: int = 5) -> str:
+def _run(cmd: list[str], timeout: int = 5, stderr: bool = False) -> str:
     try:
         result = subprocess.run(
             cmd, capture_output=True, text=True, timeout=timeout, check=False
         )
-        return result.stdout
+        return (result.stdout + result.stderr) if stderr else result.stdout
     except (FileNotFoundError, subprocess.TimeoutExpired, PermissionError):
         return ""
 
@@ -68,10 +68,23 @@ class MacOSPlatform(AbstractPlatform):
         return sorted(ports, key=lambda x: x["port"])
 
     def get_firewall_status(self) -> dict:
-        # macOS Application Firewall 상태 확인
+        # 방법 1: defaults 로 Application Firewall 전역 상태 확인 (sudo 불필요)
+        alf_state = _run([
+            "defaults", "read", "/Library/Preferences/com.apple.alf", "globalstate"
+        ]).strip()
+        if alf_state in ("0", "1", "2"):
+            active = alf_state in ("1", "2")
+            return {
+                "supported": True,
+                "engine": "appfirewall",
+                "active": active,
+                "rules": _get_appfw_rules(),
+            }
+
+        # 방법 2: socketfilterfw (stdout+stderr 모두 확인)
         fw_out = _run([
             "/usr/libexec/ApplicationFirewall/socketfilterfw", "--getglobalstate"
-        ])
+        ], stderr=True)
         if fw_out:
             active = "enabled" in fw_out.lower()
             return {
@@ -81,11 +94,13 @@ class MacOSPlatform(AbstractPlatform):
                 "rules": _get_appfw_rules(),
             }
 
-        # pf 시도 (sudo 필요할 수 있음)
-        pf_out = _run(["pfctl", "-s", "rules"])
-        if pf_out:
+        # 방법 3: pfctl (sudo 실행 시 동작)
+        pf_out = _run(["pfctl", "-s", "rules"], stderr=True)
+        if pf_out and "permission denied" not in pf_out.lower():
             rules = _parse_pf_rules(pf_out)
-            return {"supported": True, "engine": "pf", "active": True, "rules": rules}
+            pf_info = _run(["pfctl", "-s", "info"], stderr=True)
+            active = "Status: Enabled" in pf_info
+            return {"supported": True, "engine": "pf", "active": active, "rules": rules}
 
         return {"supported": False, "engine": "unknown", "active": False, "rules": []}
 

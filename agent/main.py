@@ -111,4 +111,8 @@ def run() -> None:
 
 
 if __name__ == "__main__":
-    run()
+    try:
+        run()
+    except KeyboardInterrupt:
+        log.info("에이전트 종료")
+        sys.exit(0)
