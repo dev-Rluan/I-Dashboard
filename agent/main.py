@@ -57,7 +57,7 @@ def collect() -> dict:
     }
 
     snapshot["resources"] = _safe(lambda: __import__("core.resources", fromlist=["get_resources"]).get_resources(), name="resources")
-    snapshot["network"]   = _safe(lambda: __import__("core.network",    fromlist=["get_interfaces"]).get_interfaces(),   [], name="network")
+    snapshot["network"]   = _safe(lambda: __import__("core.network",    fromlist=["get_network_interfaces"]).get_network_interfaces(),   [], name="network")
     snapshot["ports"]     = _safe(lambda: __import__("core.ports",      fromlist=["get_open_ports"]).get_open_ports(),   [], name="ports")
     snapshot["processes"] = _safe(lambda: __import__("core.processes",  fromlist=["get_processes"]).get_processes(),     [], name="processes")
     snapshot["services"]  = _safe(lambda: __import__("core.services",   fromlist=["get_services"]).get_services(),       [], name="services")
