@@ -55,7 +55,7 @@ function AgentDetail({ agent }: { agent: Agent }) {
       {!snap ? null : !res ? (
         <div className="text-yellow-600 text-sm">리소스 수집 실패 — 에이전트 로그를 확인하세요</div>
       ) : null}
-      {res ? (
+      {res && (
         <div className="space-y-2">
           <div>
             <div className="text-gray-500 text-xs mb-1">CPU</div>
