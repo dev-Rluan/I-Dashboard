@@ -95,4 +95,6 @@ export interface AgentSnapshot {
   services?: Service[];
   firewall?: FirewallStatus;
   docker?: DockerResult;
+  logs_system?: LogEntry[];
+  logs_auth?: LogEntry[];
 }

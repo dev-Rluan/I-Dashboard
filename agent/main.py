@@ -67,6 +67,16 @@ def collect() -> dict:
         {"supported": False, "containers": []},
         name="docker",
     )
+    snapshot["logs_system"] = _safe(
+        lambda: __import__("core.logs", fromlist=["get_logs"]).get_logs("system", 50),
+        [],
+        name="logs_system",
+    )
+    snapshot["logs_auth"] = _safe(
+        lambda: __import__("core.logs", fromlist=["get_logs"]).get_logs("auth", 50),
+        [],
+        name="logs_auth",
+    )
 
     return snapshot
 
