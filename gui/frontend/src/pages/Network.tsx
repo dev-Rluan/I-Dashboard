@@ -2,6 +2,8 @@ import { useEffect, useState } from "react"
 import { api } from "../lib/api"
 import type { NetworkInterface } from "../lib/api"
 import { useInterval } from "../hooks/useInterval"
+import { useAgentFallback } from "../hooks/useAgentFallback"
+import { AgentSelector, AgentBanner } from "../components/AgentSelector"
 import StatusBadge from "../components/StatusBadge"
 
 function fmtBps(b: number) {
@@ -11,14 +13,24 @@ function fmtBps(b: number) {
 }
 
 export default function Network() {
-  const [ifaces, setIfaces] = useState<NetworkInterface[]>([])
-  const load = () => api.network().then(setIfaces).catch(() => {})
-  useEffect(() => { load() }, [])
-  useInterval(load, 3000)
+  const [localIfaces, setLocalIfaces] = useState<NetworkInterface[]>([])
+  const { isDocker, agents, selectedId, setSelectedId, snap } = useAgentFallback(5000)
+
+  const load = () => api.network().then(setLocalIfaces).catch(() => {})
+  useEffect(() => { if (!isDocker) load() }, [isDocker])
+  useInterval(() => { if (!isDocker) load() }, 3000)
+
+  const ifaces = isDocker ? (snap?.network ?? []) : localIfaces
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold text-gray-100">네트워크 인터페이스</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold text-gray-100">네트워크 인터페이스</h1>
+        {isDocker && <AgentSelector agents={agents} selectedId={selectedId} onChange={setSelectedId} />}
+      </div>
+
+      {isDocker && <AgentBanner />}
+
       <div className="grid gap-4">
         {ifaces.map(iface => (
           <div key={iface.name} className="bg-gray-800 border border-gray-700 rounded-lg p-4">
@@ -52,7 +64,9 @@ export default function Network() {
           </div>
         ))}
         {ifaces.length === 0 && (
-          <div className="text-center text-gray-500 py-8">인터페이스 정보 없음</div>
+          <div className="text-center text-gray-500 py-8">
+            {isDocker && !snap ? "에이전트 연결 대기 중..." : "인터페이스 정보 없음"}
+          </div>
         )}
       </div>
     </div>

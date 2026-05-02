@@ -2,15 +2,23 @@ import { useState, useEffect } from "react"
 import { api } from "../lib/api"
 import type { Process } from "../lib/api"
 import { useInterval } from "../hooks/useInterval"
+import { useAgentFallback } from "../hooks/useAgentFallback"
+import { AgentSelector, AgentBanner } from "../components/AgentSelector"
 
 export default function Processes() {
-  const [procs,  setProcs]  = useState<Process[]>([])
+  const [localProcs, setLocalProcs] = useState<Process[]>([])
   const [sort,   setSort]   = useState<"cpu" | "memory">("cpu")
   const [search, setSearch] = useState("")
+  const { isDocker, agents, selectedId, setSelectedId, snap } = useAgentFallback(5000)
 
-  const load = () => api.processes(sort).then(setProcs).catch(() => {})
-  useEffect(() => { load() }, [sort])
-  useInterval(load, 3000)
+  const load = () => api.processes(sort).then(setLocalProcs).catch(() => {})
+  useEffect(() => { if (!isDocker) load() }, [isDocker, sort])
+  useInterval(() => { if (!isDocker) load() }, 3000)
+
+  const rawProcs = isDocker ? (snap?.processes ?? []) : localProcs
+  const procs = [...rawProcs].sort((a, b) =>
+    sort === "cpu" ? b.cpu_percent - a.cpu_percent : b.memory_mb - a.memory_mb
+  )
 
   const visible = procs.filter(p => {
     if (!search) return true
@@ -23,6 +31,7 @@ export default function Processes() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-100">프로세스 모니터</h1>
         <div className="flex gap-2">
+          {isDocker && <AgentSelector agents={agents} selectedId={selectedId} onChange={setSelectedId} />}
           <input type="text" placeholder="이름·PID·사용자 검색"
             value={search} onChange={e => setSearch(e.target.value)}
             className="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded px-3 py-1.5 w-48 focus:outline-none focus:border-cyan-500"
@@ -31,13 +40,14 @@ export default function Processes() {
             <button key={s} onClick={() => setSort(s)}
               className={`text-sm px-3 py-1.5 rounded border transition-colors ${
                 sort === s ? "bg-cyan-700 border-cyan-500 text-white" : "bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-400"
-              }`}
-            >
+              }`}>
               {s === "cpu" ? "CPU순" : "메모리순"}
             </button>
           ))}
         </div>
       </div>
+
+      {isDocker && <AgentBanner />}
 
       <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
         <table className="w-full text-sm">
@@ -72,10 +82,15 @@ export default function Processes() {
                 <td className="px-4 py-2 text-gray-400">{p.user}</td>
               </tr>
             ))}
+            {visible.length === 0 && (
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                {isDocker && !snap ? "에이전트 연결 대기 중..." : "결과 없음"}
+              </td></tr>
+            )}
           </tbody>
         </table>
       </div>
-      <div className="text-gray-500 text-xs">{visible.length}개 표시 (3초 자동갱신)</div>
+      <div className="text-gray-500 text-xs">{visible.length}개 표시</div>
     </div>
   )
 }
